@@ -76,20 +76,10 @@ def ServerMonitor():
         time.sleep(0.1)
         con.Live()
 
-        if linkNum != con.GetLinkNum():
-            linkNum = con.GetLinkNum()
-            print("当前连接数：", linkNum)
-            iplist = con.GetIpList()
-            portlist = con.GetIpPortList()
-            for i in range(con.GetLinkNum()):
-                print(iplist[i],portlist[i])
-
-        # if len(recvdata) > 5:
         while not q.empty():
             data = q.get()
             logger.info(data)
-            print(data)
-
+            # print(data)
 
 # 获取链接数量
 def GetLinkNum():
@@ -106,7 +96,7 @@ def ServerStart(ADDRESS):
     return
 
 def loggingConfig():
-    logging.config.fileConfig('loggingsocket.conf')
+    logging.config.fileConfig('logging.conf')
     logger = logging.getLogger('main')
     logger.info('Logging main Start')
 
@@ -120,6 +110,33 @@ def loadSocketDefaultSettings():
             socketConfigFile.close()
             return defaultSocketConfig
 
+def SocketSendThread():
+    while True:
+        time.sleep(0.1)
+
+        if con.GetLinkNum() > 0:
+            print("[1、获取在线列表， 2、发送给指定IP]")
+            str = input("请输入需要执行的流程：\r\n")
+            n = int(str, 10)
+
+            if (n == 1): # 获取在线列表
+                iplist = con.GetIpList()
+                portlist = con.GetIpPortList()
+                for i in range(con.GetLinkNum()):
+                    print('索引号：', i, ', IP：', iplist[i], ', Port：', portlist[i])
+            elif (n == 2): # 发送给指定IP
+                strindex = input("请输入索引号：")
+                i = int(strindex, 10)
+                if i < con.GetLinkNum():
+                    conn = con.GetConn(i)
+
+                    sendstr = input("请输入发送报文：")
+                    if len(sendstr) > 10:
+                        sendstr = sendstr.replace(" ","")
+                        conn.sendall(bytes(sendstr + " ", encoding="utf-8"))
+            else:
+                pass
+
 if __name__ == "__main__":
     loggingConfig()
     defaultSocketConfig = loadSocketDefaultSettings()
@@ -130,5 +147,8 @@ if __name__ == "__main__":
     logger.info(ADDRESS)
     t = threading.Thread(target=ServerMonitor)
     t.start()
+    ts = threading.Thread(target=SocketSendThread)
+    ts.start()
     server = socketserver.ThreadingTCPServer(ADDRESS, Myserver)
     server.serve_forever()
+
