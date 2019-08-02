@@ -1,12 +1,13 @@
+import sys
+sys.path.append('../')
+
 import logging.config
 import threading
-import PublicLib.Socket.socketServer as ss
-import PublicLib.public as pub
+from PublicLib.Socket import socketServer as ss
+from PublicLib import public as pub
 
 
 if __name__ == "__main__":
-    print("hello world")
-    '''
     pub.loggingConfig('logging.conf')
     defaultSocketConfig = pub.loadDefaultSettings("socket.json")
 
@@ -19,6 +20,4 @@ if __name__ == "__main__":
     t.start()
     ts = threading.Thread(target=ss.SocketSendThread)
     ts.start()
-    server = ss.socketserver.ThreadingTCPServer(ADDRESS, ss.Myserver)
-    server.serve_forever()
-    '''
+    ss.ServerStart(ADDRESS)
